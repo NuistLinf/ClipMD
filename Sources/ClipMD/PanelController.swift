@@ -335,6 +335,7 @@ final class PanelController {
         }
     }
     var isVisible: Bool { panel.isVisible }
+    var effectiveAppearanceName: String { panel.effectiveAppearance.name.rawValue }
     var isTucked: Bool { state != .floating }
     var isPinned: Bool { model.pinned }
 
@@ -672,8 +673,14 @@ final class PanelController {
     /// 测试用：把悬浮窗内容画成 PNG。ImageRenderer 画不出玻璃效果，底下垫一块浅灰色代替
     func snapshot(to folder: URL) {
         guard let actions else { return }
+        // 快照里不画收起后的把手
+        let tuckedEdge = model.tuckedEdge
         model.snapshotMode = true
-        defer { model.snapshotMode = false }
+        model.tuckedEdge = nil
+        defer {
+            model.snapshotMode = false
+            model.tuckedEdge = tuckedEdge
+        }
         for dark in [false, true] {
             let view = PanelView(store: store, history: history, model: model, actions: actions)
                 .frame(width: PanelMetrics.width + PanelMetrics.margin * 2)

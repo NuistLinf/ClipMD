@@ -55,6 +55,10 @@ enum TestURLs {
             case "reject": panel.setDropHover(.reject(TrackingContainerView.rejectMessage))
             default: panel.setDropHover(.none)
             }
+        case "/appearance":
+            if let choice = AppearanceChoice(rawValue: argument) { Preferences.shared.setAppearance(choice) }
+            Log.app.notice("appearance=\(Preferences.shared.appearance.rawValue, privacy: .public) effective=\(NSApp.effectiveAppearance.name.rawValue, privacy: .public) panel=\(panel.effectiveAppearanceName, privacy: .public)")
+        case "/render-glyphs": renderGlyphs(to: URL(filePath: argument, directoryHint: .isDirectory))
         case "/render-panel": panel.renderLayers(to: URL(filePath: argument))
         case "/scroll-clips": panel.simulateScroll(Int32(argument) ?? -120)
         case "/snapshot-panel": panel.snapshot(to: URL(filePath: argument, directoryHint: .isDirectory))
@@ -69,6 +73,26 @@ enum TestURLs {
             Log.app.notice("state clips(\(history.items.count))=\(clips, privacy: .public) notes=\(titles, privacy: .public) previews=\(docs.joined(separator: "; "), privacy: .public) toolbar=\(previews.toolbarItemCounts, privacy: .public) panel=\(panel.debugState, privacy: .public)")
         default: Log.app.error("unknown test url \(url.absoluteString, privacy: .public)")
         }
+    }
+
+    /// 把菜单栏和悬浮窗左上角的标志画出来看：实际大小（2 倍像素）和放大 5 倍，浅色、深色各一份
+    private static func renderGlyphs(to folder: URL) {
+        let view = HStack(spacing: 30) {
+            ForEach([ColorScheme.light, .dark], id: \.self) { scheme in
+                HStack(spacing: 24) {
+                    MenuBarGlyph(size: 18).foregroundStyle(.primary)
+                    MenuBarGlyph(size: 18).scaleEffect(5).frame(width: 90, height: 90)
+                    AppGlyph(size: 20)
+                    AppGlyph(size: 20).scaleEffect(5).frame(width: 100, height: 100)
+                }
+                .padding(30)
+                .background(scheme == .dark ? Color(white: 0.16) : Color(white: 0.94))
+                .environment(\.colorScheme, scheme)
+            }
+        }
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        if let image = renderer.cgImage { CaptureRenderer.writePNG(image, to: folder.appending(path: "glyphs.png")) }
     }
 
     /// 用 ImageRenderer 把预览内容画成 PNG（浅色、深色各一张），看排版和公式的实际效果

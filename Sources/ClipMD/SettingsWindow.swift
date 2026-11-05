@@ -129,6 +129,13 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("外观") {
+                Picker("外观", selection: Binding(get: { Preferences.shared.appearance }, set: { Preferences.shared.setAppearance($0) })) {
+                    ForEach(AppearanceChoice.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
+
             Section("悬浮窗") {
                 Toggle("固定位置", isOn: Binding(get: { panel.isPinned }, set: { _ in actions.togglePin() }))
                 LabeledContent("移到") {

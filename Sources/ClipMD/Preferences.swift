@@ -65,6 +65,29 @@ enum MarkdownApps {
     }
 }
 
+/// 外观：跟随系统，或者固定浅色、深色（只影响 ClipMD 自己的窗口）
+enum AppearanceChoice: String, CaseIterable, Identifiable {
+    case system, light, dark
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .system: "跟随系统"
+        case .light: "浅色"
+        case .dark: "深色"
+        }
+    }
+
+    var appearance: NSAppearance? {
+        switch self {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+    }
+}
+
 /// 简单的偏好设置
 @MainActor
 @Observable
@@ -72,6 +95,10 @@ final class Preferences {
     static let shared = Preferences()
     private static let previewAppKey = "previewApp"
     private static let convertHTMLKey = "convertHTML"
+    private static let appearanceKey = "appearance"
+
+    /// 浅色、深色还是跟随系统
+    private(set) var appearance = UserDefaults.standard.string(forKey: Preferences.appearanceKey).flatMap(AppearanceChoice.init) ?? .system
 
     /// 点眼睛按钮时用哪个应用打开；nil 表示用 ClipMD 内置预览
     private(set) var previewApp: URL?
@@ -92,6 +119,17 @@ final class Preferences {
         } else {
             UserDefaults.standard.removeObject(forKey: Self.previewAppKey)
         }
+    }
+
+    func setAppearance(_ choice: AppearanceChoice) {
+        appearance = choice
+        UserDefaults.standard.set(choice.rawValue, forKey: Self.appearanceKey)
+        applyAppearance()
+    }
+
+    /// 整个应用的窗口（悬浮窗、预览、设置、截图、提示）一起换
+    func applyAppearance() {
+        NSApp.appearance = appearance.appearance
     }
 
     func setConvertHTML(_ enabled: Bool) {

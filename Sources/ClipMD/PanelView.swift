@@ -386,12 +386,10 @@ extension PanelView {
                 .padding(.top, 7)
 
             HStack(spacing: 2) {
-                Image(systemName: "doc.on.clipboard")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
+                AppGlyph(size: 20)
                 Text("ClipMD")
                     .font(.system(size: 13, weight: .semibold))
-                    .padding(.leading, 4)
+                    .padding(.leading, 5)
                 Spacer()
                 ScreenshotButton(screenshot: actions.screenshot)
                 IconButton(symbol: "folder", label: "打开保存文件夹", action: actions.openFolder)

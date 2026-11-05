@@ -59,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var ocrItem: NSMenuItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Preferences.shared.applyAppearance()
         floating = PanelController(
             store: store,
             history: history,
@@ -522,7 +523,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func setUpStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "ClipMD")
+        statusItem.button?.image = MenuBarGlyph.templateImage() ?? NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "ClipMD")
 
         let menu = NSMenu()
         menu.delegate = self

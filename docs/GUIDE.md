@@ -1,4 +1,4 @@
-# ClipMD
+# ClipMD 详细说明
 
 复制 AI 的回复后按 **⌃⌥S**：内容存成 `.md` 文件，同时把这个文件放到剪贴板。到微信、飞书、邮件里 ⌘V，发出去的就是文件附件。
 
@@ -32,7 +32,8 @@ macOS 26 及以上，Swift 6 + SwiftUI（界面、Liquid Glass、动效）+ AppK
 - **公式**：预览会渲染 `$…$`、`\(…\)` 行内公式和 `$$…$$`、`\[…\]` 独立公式（也支持写在列表、表格里的）。像「$5 和 $10」这种金额不会被当成公式，代码里的 `$` 也不处理。公式字体不随安装包带：第一次预览到有公式的文档时，顶部会提示「下载公式字体（约 0.8 MB）」，点了才下载；没下载时公式显示原文。写错的公式会显示原文并提示
 - **移动**：按住顶部标题栏拖动。菜单栏图标的菜单或设置里打开「固定位置」，就固定在当前位置（不能拖、不会自动收起）。菜单栏里的「把悬浮窗移到」可以一键放到屏幕四个角
 - **贴边收起**：点右上角的收起按钮，或者把窗口拖到屏幕边上。鼠标移到那条细边上会探出来，移开后缩回去
-- **设置**：点悬浮窗右上角的齿轮，或者按 ⌘,：快捷键、保存位置（比如改成 Obsidian 库）、预览方式（内置 / Typora / VS Code / 其他应用）、公式字体（下载或移除）、监听复制、固定位置和移到四角、读取剪贴板和录制屏幕的权限
+- **设置**：点悬浮窗右上角的齿轮，或者按 ⌘,：快捷键、外观（跟随系统 / 浅色 / 深色，悬浮窗、预览、截图界面一起换）、保存位置（比如改成 Obsidian 库）、预览方式（内置 / Typora / VS Code / 其他应用）、公式字体（下载或移除）、监听复制、固定位置和移到四角、读取剪贴板和录制屏幕的权限
+- **图标**：应用图标是深色底板上的截图取景框加 Markdown 标志（M↓）。菜单栏里是同一个设计的单色版，跟着菜单栏的深浅自动变色；悬浮窗左上角是小号的彩色版，浅色模式下换成浅色底板，和浅色玻璃更协调
 - **菜单栏图标**：保存、显示或隐藏悬浮窗、固定位置、贴边收起、打开设置
 - **`clipmd://save`**：用快捷指令、Raycast 等工具运行 `open -g clipmd://save`，效果和按快捷键一样
 
@@ -54,7 +55,8 @@ macOS 26 及以上，Swift 6 + SwiftUI（界面、Liquid Glass、动效）+ AppK
 只需要 Command Line Tools，不需要 Xcode：
 
 ```bash
-./scripts/build-app.sh      # 生成 build/ClipMD.app
+./scripts/install.sh        # 编译、装进「应用程序」并打开（记录和设置在 ~/Library 里，重装不丢）
+./scripts/build-app.sh      # 只生成 build/ClipMD.app
 open build/ClipMD.app
 ./scripts/test.sh           # 单元测试
 ./scripts/make-icon.sh      # 重新生成应用图标 Resources/AppIcon.icns
@@ -141,6 +143,7 @@ Sources/ClipMD/
   ClipPreview.swift   剪贴板记录的预览窗口
   ClipHistory.swift   剪贴板记录（存取、去重规则在 ClipMDCore/ClipHistoryList.swift）
   Feedback.swift      保存结果、错误和修复方式，日志
+  AppGlyph.swift      悬浮窗左上角和菜单栏的标志（和应用图标同一个设计）
   HotKey.swift        全局快捷键、可自定义的三个快捷键
   Screenshot.swift    冻结屏幕画面、窗口列表、识别文字（Vision，在子进程里跑）
   CaptureOverlay.swift  截图界面：认窗口、选区、放大镜取色、标注、合成导出
