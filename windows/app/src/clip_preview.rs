@@ -12,7 +12,7 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 
 use crate::anim::{self, FrameTimer, Spring};
 use crate::app::app;
-use crate::gfx::{self, Color, Rect, Surface};
+use crate::gfx::{self, Rect, Surface};
 use crate::markdown_view::DocView;
 use crate::text::{self, Font, TextOpts};
 use crate::theme;
@@ -382,5 +382,3 @@ impl Handler for ClipPreview {
     }
 }
 
-#[allow(dead_code)]
-fn unused(_c: Color) {}

@@ -25,9 +25,6 @@ pub struct Spring {
 }
 
 impl Spring {
-    pub fn new(value: f32) -> Spring {
-        Spring { value, velocity: 0.0, target: value, response: 0.32, damping: 0.86 }
-    }
 
     pub fn with(value: f32, response: f32, damping: f32) -> Spring {
         Spring { value, velocity: 0.0, target: value, response, damping }
@@ -140,8 +137,3 @@ impl FrameTimer {
     }
 }
 
-/// 缓动曲线（少数固定时长的过渡用，比如提示框淡出）
-pub fn ease_out_cubic(t: f32) -> f32 {
-    let t = t.clamp(0.0, 1.0);
-    1.0 - (1.0 - t).powi(3)
-}

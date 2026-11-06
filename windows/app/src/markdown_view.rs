@@ -371,9 +371,6 @@ impl DocView {
         None
     }
 
-    pub fn plain_text(&self) -> String {
-        self.doc.blocks.iter().map(|b| b.plain()).collect::<Vec<_>>().join("\n\n")
-    }
 }
 
 fn height_of(layout: &IDWriteTextLayout) -> f32 {

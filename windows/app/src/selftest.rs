@@ -307,6 +307,12 @@ fn more_steps() {
             Some(hwnd) => window_shot("screen-clip-preview-text.png", hwnd),
             None => check("剪贴板预览打开", false, "没有窗口"),
         }
+        crate::clip_preview::set_formatted(false);
+    });
+    step(600, || {
+        if let Some(hwnd) = crate::clip_preview::hwnd() {
+            window_shot("screen-clip-preview-plain.png", hwnd);
+        }
         crate::clip_preview::close();
         let id = app().history.borrow().items.iter().find(|i| i.is_image()).map(|i| i.id.clone());
         if let Some(id) = id {

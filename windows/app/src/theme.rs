@@ -3,6 +3,8 @@
 //! Windows 11 上窗口背后是系统的亚克力材质，我们在上面再叠一层半透明的底色；
 //! Windows 10 没有亚克力，用不透明的底色。
 
+#![allow(dead_code)]
+
 use std::cell::Cell;
 
 use windows::Win32::System::Registry::{HKEY_CURRENT_USER, RRF_RT_REG_DWORD, RegGetValueW};

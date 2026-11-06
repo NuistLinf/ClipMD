@@ -111,19 +111,6 @@ pub fn decode_bytes(bytes: &[u8], max_side: Option<u32>) -> Result<Image> {
     }
 }
 
-/// 只读尺寸，不解码像素
-pub fn size_of_file(path: &Path) -> Option<(u32, u32)> {
-    unsafe {
-        let factory = wic();
-        let wide = crate::util::h(&path.to_string_lossy());
-        let decoder = factory.CreateDecoderFromFilename(&wide, None, GENERIC_READ_ACCESS, WICDecodeMetadataCacheOnDemand).ok()?;
-        let frame = decoder.GetFrame(0).ok()?;
-        let (mut w, mut h) = (0, 0);
-        frame.GetSize(&mut w, &mut h).ok()?;
-        Some((w, h))
-    }
-}
-
 /// BGRA（预乘）→ PNG
 pub fn encode_png(image: &Image) -> Result<Vec<u8>> {
     unsafe {
@@ -287,7 +274,3 @@ pub fn to_dibv5(image: &Image) -> Vec<u8> {
     data
 }
 
-#[allow(dead_code)]
-pub fn guid_eq(a: &GUID, b: &GUID) -> bool {
-    a == b
-}

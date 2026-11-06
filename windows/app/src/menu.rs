@@ -1,5 +1,7 @@
 //! 右键菜单：系统原生菜单（Windows 11 上自带圆角和动画），跟着 ClipMD 的外观设置切换深浅色。
 
+#![allow(dead_code)]
+
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, WPARAM};
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
 use windows::Win32::UI::WindowsAndMessaging::*;

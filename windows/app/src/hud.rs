@@ -100,12 +100,6 @@ pub fn show_after(delay: f64, toast: Toast) {
     });
 }
 
-pub fn hide() {
-    if let Some(hud) = HUD.with(|h| h.borrow().clone()) {
-        hud.start_closing();
-    }
-}
-
 fn card_width(toast: &Toast) -> f32 {
     let title = text::measure(&toast.title, Font::ui(14.0, 600));
     let detail = text::measure(&toast.detail, Font::ui(12.0, 400));

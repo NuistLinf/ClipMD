@@ -2,6 +2,8 @@
 //! Windows 10、11 上一模一样，任何缩放比例都清晰。风格对齐 macOS 版用的 SF Symbols。
 //! 还有 ClipMD 的标志（取景框 + M↓）：悬浮窗左上角的彩色版、托盘里的单色版。
 
+#![allow(dead_code)]
+
 use windows::Win32::Graphics::Direct2D::Common::*;
 use windows::Win32::Graphics::Direct2D::{D2D1_QUADRATIC_BEZIER_SEGMENT, ID2D1GeometrySink};
 use windows::Win32::Graphics::Gdi::*;

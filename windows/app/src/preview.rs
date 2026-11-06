@@ -55,6 +55,8 @@ struct State {
 pub struct Preview {
     hwnd: Cell<HWND>,
     st: RefCell<State>,
+    /// 正在往编辑框里放文字：这时的"内容变了"通知不算编辑
+    loading: Cell<bool>,
 }
 
 thread_local! {
@@ -74,6 +76,7 @@ pub fn open(path: &Path) {
     }
     let text = std::fs::read_to_string(path).unwrap_or_default();
     let preview = Rc::new(Preview {
+        loading: Cell::new(false),
         hwnd: Cell::new(HWND::default()),
         st: RefCell::new(State {
             path: path.to_path_buf(),
@@ -100,14 +103,15 @@ pub fn open(path: &Path) {
     let y = work.top + (work.bottom - work.top - h) / 2 + offset;
     let Ok(hwnd) = window::create(&format!("{title} — ClipMD"), WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, WINDOW_EX_STYLE(0), (x, y, w, h), None, preview.clone()) else { return };
     preview.hwnd.set(hwnd);
-    {
-        let mut st = preview.st.borrow_mut();
-        st.surface = Surface::new_direct(hwnd);
-        if let Some(editor) = Editor::new(hwnd, EDITOR_ID) {
-            editor.set_text(&text);
-            st.editor = Some(editor);
-        }
+    preview.st.borrow_mut().surface = Surface::new_direct(hwnd);
+    // 建编辑框、放文字时它会给本窗口发通知，不能占着状态
+    let editor = Editor::new(hwnd, EDITOR_ID);
+    if let Some(editor) = &editor {
+        preview.loading.set(true);
+        editor.set_text(&text);
+        preview.loading.set(false);
     }
+    preview.st.borrow_mut().editor = editor;
     window::style_window(hwnd, theme::is_dark(), window::Backdrop::None, false);
     preview.layout_children();
     unsafe {
@@ -132,8 +136,9 @@ pub fn restyle_all() {
     for p in all {
         let hwnd = p.hwnd.get();
         window::style_window(hwnd, theme::is_dark(), window::Backdrop::None, false);
-        if let Some(editor) = &p.st.borrow().editor {
-            editor.apply_theme(theme::is_dark());
+        let editor_hwnd = p.st.borrow().editor.as_ref().map(|e| e.hwnd);
+        if let Some(hwnd) = editor_hwnd {
+            Editor { hwnd }.apply_theme(theme::is_dark());
         }
         window::invalidate(hwnd);
     }
@@ -182,10 +187,14 @@ impl Preview {
         let hwnd = self.hwnd.get();
         let s = window::scale(hwnd);
         let size = self.size_dip();
-        let st = self.st.borrow();
-        if let Some(editor) = &st.editor {
+        let (mode, editor_hwnd) = {
+            let st = self.st.borrow();
+            (st.mode, st.editor.as_ref().map(|e| e.hwnd))
+        };
+        if let Some(hwnd) = editor_hwnd {
+            let editor = Editor { hwnd };
             let body = Rect::new(0.0, TOOLBAR_H, size.w, (size.h - TOOLBAR_H).max(0.0));
-            match st.mode {
+            match mode {
                 Mode::Preview => editor.show(false),
                 Mode::Edit => {
                     editor.place(body, s);
@@ -207,6 +216,7 @@ impl Preview {
             }
             // 从编辑切回预览：用编辑框里最新的内容
             if st.dirty || mode != Mode::Edit {
+                // 读编辑框文字只是 WM_GETTEXT，不会回发通知
                 if let Some(text) = st.editor.as_ref().map(|e| e.text()) {
                     st.doc.set_source(&text);
                 }
@@ -220,8 +230,9 @@ impl Preview {
         }
         self.layout_children();
         if mode != Mode::Preview {
-            if let Some(editor) = &self.st.borrow().editor {
-                editor.focus();
+            let editor_hwnd = self.st.borrow().editor.as_ref().map(|e| e.hwnd);
+            if let Some(hwnd) = editor_hwnd {
+                Editor { hwnd }.focus();
             }
         }
         window::invalidate(self.hwnd.get());
@@ -234,8 +245,9 @@ impl Preview {
             if !st.dirty {
                 return;
             }
-            (st.path.clone(), st.editor.as_ref().map(|e| e.text()).unwrap_or_default())
+            (st.path.clone(), st.editor.as_ref().map(|e| e.hwnd))
         };
+        let text = text.map(|hwnd| Editor { hwnd }.text()).unwrap_or_default();
         match clipmd_core::note_writer::overwrite(&text, &path) {
             Ok(()) => {
                 let mut st = self.st.borrow_mut();
@@ -495,7 +507,7 @@ impl Handler for Preview {
             }
             WM_COMMAND => {
                 // 编辑框内容变了：停止输入 0.7 秒后保存，并排时同步刷新预览
-                if crate::util::loword(wp.0) as usize == EDITOR_ID && crate::util::hiword(wp.0) as u32 == EN_CHANGE {
+                if crate::util::loword(wp.0) as usize == EDITOR_ID && crate::util::hiword(wp.0) as u32 == EN_CHANGE && !self.loading.get() {
                     self.st.borrow_mut().dirty = true;
                     self.st.borrow_mut().status = None;
                     unsafe {
@@ -548,12 +560,13 @@ impl Handler for Preview {
                         if let Ok(text) = std::fs::read_to_string(&path) {
                             let changed = self.st.borrow().editor.as_ref().map(|e| e.text() != text.replace("\r\n", "\n")).unwrap_or(false);
                             if changed {
-                                let mut st = self.st.borrow_mut();
-                                if let Some(editor) = &st.editor {
-                                    editor.set_text(&text);
+                                let editor_hwnd = self.st.borrow().editor.as_ref().map(|e| e.hwnd);
+                                if let Some(editor_hwnd) = editor_hwnd {
+                                    self.loading.set(true);
+                                    Editor { hwnd: editor_hwnd }.set_text(&text);
+                                    self.loading.set(false);
                                 }
-                                st.doc.set_source(&text);
-                                drop(st);
+                                self.st.borrow_mut().doc.set_source(&text);
                                 window::invalidate(hwnd);
                             }
                         }

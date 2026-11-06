@@ -119,7 +119,4 @@ impl Editor {
         }
     }
 
-    pub fn is_visible(&self) -> bool {
-        unsafe { IsWindowVisible(self.hwnd).as_bool() }
-    }
 }

@@ -92,10 +92,6 @@ impl ClipHistory {
         self.persist();
     }
 
-    pub fn can_undo(&self) -> bool {
-        self.undo.is_some()
-    }
-
     pub fn undo(&mut self) {
         if let Some(items) = self.undo.take() {
             self.items = items;

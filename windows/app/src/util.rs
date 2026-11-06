@@ -4,11 +4,11 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+use windows::Win32::Foundation::{LPARAM, WPARAM};
 use windows::Win32::System::Diagnostics::Debug::OutputDebugStringW;
 use windows::Win32::System::SystemInformation::GetLocalTime;
 use windows::Win32::UI::Shell::{FOLDERID_Documents, FOLDERID_LocalAppData, KF_FLAG_DEFAULT, SHGetKnownFolderPath};
-use windows::core::{GUID, HSTRING, PCWSTR, PWSTR};
+use windows::core::{GUID, HSTRING, PWSTR};
 
 /// 以 0 结尾的 UTF-16
 pub fn wide(s: &str) -> Vec<u16> {
@@ -26,10 +26,6 @@ pub unsafe fn from_pwstr(p: PWSTR) -> String {
 
 pub fn h(s: &str) -> HSTRING {
     HSTRING::from(s)
-}
-
-pub fn pcwstr(buf: &[u16]) -> PCWSTR {
-    PCWSTR(buf.as_ptr())
 }
 
 fn known_folder(id: &GUID) -> Option<PathBuf> {
@@ -124,10 +120,6 @@ pub fn point_from_lparam(lp: LPARAM) -> (i32, i32) {
 
 pub fn wheel_delta(wp: WPARAM) -> i16 {
     ((wp.0 >> 16) & 0xFFFF) as i16
-}
-
-pub fn hwnd_is_null(hwnd: HWND) -> bool {
-    hwnd.0.is_null()
 }
 
 /// 毫秒级的单调时钟，动画用

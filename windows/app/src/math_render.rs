@@ -10,7 +10,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use windows::Win32::Graphics::Direct2D::*;
 use windows::Win32::Graphics::DirectWrite::*;
 use windows::core::{BOOL, HSTRING};
 use windows_numerics::Matrix3x2;
@@ -971,7 +970,11 @@ impl Ctx {
             Node::Space(w) => MathLayout { width: w * em, ..MathLayout::empty() },
             Node::Func(name, _) => self.string_box(name, Variant::Normal, style),
             Node::BigOp(c, _) => {
-                let size = if style == Style::Display { em * 1.45 } else { em * 1.08 };
+                let size = match (style, *c) {
+                    (Style::Display, '∫' | '∬' | '∭' | '∮') => em * 2.0,
+                    (Style::Display, _) => em * 1.75,
+                    _ => em * 1.12,
+                };
                 let mut b = self.char_box_sized(*c, size);
                 // 大运算符居中在数学轴上
                 let shift = (b.ascent - b.descent) / 2.0 - AXIS * em;
@@ -1358,12 +1361,3 @@ pub fn source_layout(latex: &str, size: f32) -> MathLayout {
     MathLayout { width, ascent: size * 0.78, descent: size * 0.24, cmds: vec![Cmd::Text { x: 0.0, y: 0.0, size, text: latex.to_string() }] }
 }
 
-/// 没有公式字体时的退路：原文用等宽字体
-pub fn fallback_width(latex: &str, size: f32) -> f32 {
-    text::measure(latex, Font::mono(size * 0.9)) + 8.0
-}
-
-#[allow(dead_code)]
-pub fn interpolation() -> D2D1_BITMAP_INTERPOLATION_MODE {
-    D2D1_BITMAP_INTERPOLATION_MODE_LINEAR
-}

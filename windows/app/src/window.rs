@@ -1,5 +1,7 @@
 //! 窗口的基础：注册窗口类、把消息转给 Rust 对象、DPI、DWM 的圆角和亚克力背景。
 
+#![allow(dead_code)]
+
 use std::rc::Rc;
 use std::sync::OnceLock;
 
@@ -79,11 +81,6 @@ pub fn create(
     }
 }
 
-/// 只收消息、不显示的窗口（托盘图标、剪贴板监听、热键用）
-pub fn create_message_window(handler: Rc<dyn Handler>) -> Result<HWND> {
-    create("ClipMD", WS_OVERLAPPED, WINDOW_EX_STYLE(0), (0, 0, 0, 0), Some(HWND_MESSAGE), handler)
-}
-
 unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRESULT {
     unsafe {
         if msg == WM_NCCREATE {
@@ -100,9 +97,15 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) 
             SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
             drop(Box::from_raw(ptr));
         }
-        match handler.handle(hwnd, msg, wp, lp) {
-            Some(result) => result,
-            None => DefWindowProcW(hwnd, msg, wp, lp),
+        // 某条消息处理出错（panic）时记进日志、交给系统默认处理，程序继续运行
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| handler.handle(hwnd, msg, wp, lp)));
+        match result {
+            Ok(Some(result)) => result,
+            Ok(None) => DefWindowProcW(hwnd, msg, wp, lp),
+            Err(_) => {
+                crate::log!("handler panicked on message 0x{msg:04X}");
+                DefWindowProcW(hwnd, msg, wp, lp)
+            }
         }
     }
 }
@@ -282,15 +285,6 @@ pub fn style_window(hwnd: HWND, dark: bool, backdrop: Backdrop, corners: bool) {
             let margins = MARGINS { cxLeftWidth: 0, cxRightWidth: 0, cyTopHeight: 1, cyBottomHeight: 0 };
             let _ = DwmExtendFrameIntoClientArea(hwnd, &margins);
         }
-    }
-}
-
-/// 窗口边框颜色（Windows 11），None 表示系统默认
-pub fn set_border_color(hwnd: HWND, color: Option<u32>) {
-    unsafe {
-        // DWMWA_COLOR_DEFAULT = 0xFFFFFFFF, DWMWA_COLOR_NONE = 0xFFFFFFFE
-        let value: u32 = color.unwrap_or(0xFFFF_FFFF);
-        let _ = DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &value as *const _ as *const _, 4);
     }
 }
 

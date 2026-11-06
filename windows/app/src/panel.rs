@@ -115,8 +115,6 @@ struct State {
     indicator_until: f64,
     drag_from: Option<(Id, f32, f32)>,
     visible: bool,
-    /// 不在拖动、不在弹菜单等情况下的帧动画是否已经请求
-    frame_requested: bool,
 }
 
 pub struct Panel {
@@ -188,7 +186,6 @@ impl Panel {
                 indicator_until: 0.0,
                 drag_from: None,
                 visible: false,
-                frame_requested: false,
             }),
         });
         let height = panel.target_height();
@@ -1175,12 +1172,14 @@ fn draw_primary(p: &Painter, st: PrimaryState, ia: &mut ui::Interaction, pal: &P
     let key_font = Font::ui(11.5, 600);
     let key_w = crate::text::measure(&keycap, key_font) + 16.0;
     let text_x = circle.right() + 11.0;
-    let text_w = rect.right() - key_w - 12.0 - text_x - 6.0;
+    let text_w = if st.saved { rect.right() - 14.0 - text_x } else { rect.right() - key_w - 12.0 - text_x - 6.0 };
     p.text(title, Rect::new(text_x, rect.y + 8.0, text_w, 22.0), Font::ui(15.0, 700), Color::WHITE, TextOpts::LINE);
     p.text(subtitle, Rect::new(text_x, rect.y + 29.0, text_w, 18.0), Font::ui(12.0, 500), Color::WHITE.alpha(0.88), TextOpts::LINE);
-    let key = Rect::new(rect.right() - key_w - 12.0, rect.mid_y() - 12.0, key_w, 24.0);
-    p.fill_round(key, 12.0, Color::WHITE.alpha(0.2));
-    p.text(&keycap, key, key_font, Color::WHITE, TextOpts::CENTER);
+    if !st.saved {
+        let key = Rect::new(rect.right() - key_w - 12.0, rect.mid_y() - 12.0, key_w, 24.0);
+        p.fill_round(key, 12.0, Color::WHITE.alpha(0.2));
+        p.text(&keycap, key, key_font, Color::WHITE, TextOpts::CENTER);
+    }
 }
 
 fn tab_rects(clip_count: usize) -> (Rect, Rect, String) {

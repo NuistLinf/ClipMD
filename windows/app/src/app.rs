@@ -3,7 +3,7 @@
 //! 界面全部在主线程。耗时的活（编码 PNG、识别文字、写文件）放到后台线程，做完用 `run_on_main` 回到主线程。
 
 use std::cell::{Cell, OnceCell, RefCell};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Mutex;
 
@@ -119,6 +119,11 @@ pub fn main() {
     if args.get(1).map(String::as_str) == Some("--ocr") {
         std::process::exit(crate::ocr::run_helper(args.get(2).map(String::as_str)));
     }
+    std::panic::set_hook(Box::new(|info| {
+        let location = info.location().map(|l| format!("{}:{}", l.file(), l.line())).unwrap_or_default();
+        let message = info.payload().downcast_ref::<&str>().map(|s| s.to_string()).or_else(|| info.payload().downcast_ref::<String>().cloned()).unwrap_or_default();
+        crate::log!("panic at {location}: {message}");
+    }));
     unsafe {
         let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     }
@@ -747,15 +752,8 @@ impl App {
         }
     }
 
-    pub fn note_by_name(&self, name: &str) -> Option<SavedNote> {
-        self.notes.borrow().notes.iter().find(|n| n.file_name() == name).cloned()
-    }
-
     pub fn folder(&self) -> PathBuf {
         self.notes.borrow().folder().to_path_buf()
     }
 
-    pub fn is_note_path(&self, path: &Path) -> bool {
-        path.parent() == Some(self.notes.borrow().folder())
-    }
 }

@@ -3,6 +3,8 @@
 //! 每个窗口一条带透明通道的合成交换链（`Surface`），所有窗口共用一个 Direct2D 设备上下文（界面全在主线程画）。
 //! 窗口不用 GDI 的重定向位图（WS_EX_NOREDIRECTIONBITMAP），透明的地方直接露出 DWM 画的亚克力背景。
 
+#![allow(dead_code)]
+
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 

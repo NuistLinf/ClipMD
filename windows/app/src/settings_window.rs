@@ -31,7 +31,6 @@ const K_CONVERT: u32 = 3;
 const K_RECORD: u32 = 4;
 const K_RESET: u32 = 5;
 const K_PREVIEW: u32 = 6;
-const K_PICK_APP: u32 = 7;
 const K_LISTEN: u32 = 8;
 const K_HISTORY: u32 = 9;
 const K_CLEAR: u32 = 10;

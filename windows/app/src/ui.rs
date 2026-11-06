@@ -2,6 +2,8 @@
 //!
 //! 每次绘制时登记可点击的区域，鼠标事件按上一帧登记的区域判断点到了谁。
 
+#![allow(dead_code)]
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;

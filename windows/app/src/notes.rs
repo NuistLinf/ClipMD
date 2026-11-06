@@ -98,10 +98,6 @@ impl NoteStore {
         self.refresh();
     }
 
-    pub fn has_pending_trash(&self) -> bool {
-        !self.pending_trash.is_empty()
-    }
-
     /// 监听保存文件夹：有文件增删改就给 `hwnd` 发 `msg`（自己用别的程序改了文件，列表也会跟着变）
     pub fn watch(&self, hwnd: HWND, msg: u32) {
         let generation = self.watch_generation.fetch_add(1, Ordering::SeqCst) + 1;

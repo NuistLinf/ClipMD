@@ -716,14 +716,6 @@ impl Session {
         self.redraw();
     }
 
-    pub fn test_cursor(&self, index: usize, x: f32, y: f32) {
-        self.mouse_move(index, x, y);
-    }
-
-    pub fn screen_count(&self) -> usize {
-        self.screens.len()
-    }
-
     pub fn screen_size(&self, index: usize) -> Rect {
         self.screens[index].size()
     }
@@ -734,10 +726,6 @@ impl Session {
         let (w, h) = (view.frozen.width, view.frozen.height);
         let pixels = gfx::render_offscreen(w, h, 96.0 * view.scale, theme::is_dark(), |p| self.draw(p, index))?;
         Some(Image { width: w, height: h, pixels })
-    }
-
-    pub fn cancel(&self) {
-        self.finish(Outcome::Cancel);
     }
 
     // MARK: 绘制

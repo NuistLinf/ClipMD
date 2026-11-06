@@ -3,6 +3,8 @@
 //! 界面字体用 Windows 11 的 Segoe UI Variable（没有就用 Segoe UI），中文由系统按 zh-CN 回退到微软雅黑；
 //! 图标用 Segoe Fluent Icons（Windows 10 上是 Segoe MDL2 Assets，码位基本一样）。
 
+#![allow(dead_code)]
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 
