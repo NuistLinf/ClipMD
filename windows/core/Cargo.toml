@@ -1,0 +1,19 @@
+[package]
+name = "clipmd-core"
+description = "ClipMD 的平台无关逻辑：HTML 转 Markdown、文件命名、剪贴板记录、公式提取和排版"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+html5ever = "0.40.1"
+markup5ever_rcdom = "0.40.1"
+pulldown-cmark = { version = "0.13.6", default-features = false }
+regex-lite = "0.1.9"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Globalization"] }
+
+[target.'cfg(not(windows))'.dev-dependencies]

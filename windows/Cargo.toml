@@ -1,0 +1,21 @@
+[workspace]
+resolver = "3"
+members = ["core", "app"]
+
+[workspace.package]
+version = "0.11.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/NuistLinf/ClipMD"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+# 开发时依赖也开优化，HTML 解析这些不至于太慢
+[profile.dev.package."*"]
+opt-level = 2
