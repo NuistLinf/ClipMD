@@ -407,8 +407,9 @@ impl App {
         const NIN_SELECT: u32 = WM_USER;
         const NIN_KEYSELECT: u32 = WM_USER + 1;
         match event {
-            WM_LBUTTONUP | NIN_SELECT | NIN_KEYSELECT => self.toggle_panel(),
-            WM_CONTEXTMENU | WM_RBUTTONUP => self.tray_menu(at),
+            // 版本 4 的托盘图标：单击会同时收到 WM_LBUTTONUP 和 NIN_SELECT，只认后者
+            NIN_SELECT | NIN_KEYSELECT => self.toggle_panel(),
+            WM_CONTEXTMENU => self.tray_menu(at),
             _ => {}
         }
     }

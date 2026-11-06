@@ -217,6 +217,8 @@ fn create_gfx(generation: u32) -> Result<Gfx> {
 
 pub struct Surface {
     hwnd: HWND,
+    /// true：普通的窗口交换链（窗口里有编辑框这类子控件时用，子控件才能正常显示）
+    direct: bool,
     swapchain: Option<IDXGISwapChain1>,
     target: Option<IDCompositionTarget>,
     visual: Option<IDCompositionVisual>,
@@ -226,7 +228,12 @@ pub struct Surface {
 
 impl Surface {
     pub fn new(hwnd: HWND) -> Surface {
-        Surface { hwnd, swapchain: None, target: None, visual: None, size: (0, 0), generation: 0 }
+        Surface { hwnd, direct: false, swapchain: None, target: None, visual: None, size: (0, 0), generation: 0 }
+    }
+
+    /// 不透明、带子控件的窗口用
+    pub fn new_direct(hwnd: HWND) -> Surface {
+        Surface { hwnd, direct: true, swapchain: None, target: None, visual: None, size: (0, 0), generation: 0 }
     }
 
     fn ensure(&mut self, g: &Gfx, width: u32, height: u32) -> Result<()> {
@@ -237,7 +244,25 @@ impl Surface {
             self.visual = None;
         }
         unsafe {
-            if self.swapchain.is_none() {
+            if self.swapchain.is_none() && self.direct {
+                let desc = DXGI_SWAP_CHAIN_DESC1 {
+                    Width: width,
+                    Height: height,
+                    Format: DXGI_FORMAT_B8G8R8A8_UNORM,
+                    Stereo: false.into(),
+                    SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
+                    BufferUsage: DXGI_USAGE_RENDER_TARGET_OUTPUT,
+                    BufferCount: 1,
+                    Scaling: DXGI_SCALING_STRETCH,
+                    SwapEffect: DXGI_SWAP_EFFECT_DISCARD,
+                    AlphaMode: DXGI_ALPHA_MODE_UNSPECIFIED,
+                    Flags: 0,
+                };
+                let swapchain = g.dxgi_factory.CreateSwapChainForHwnd(&g.d3d, self.hwnd, &desc, None, None)?;
+                self.swapchain = Some(swapchain);
+                self.size = (width, height);
+                self.generation = g.generation;
+            } else if self.swapchain.is_none() {
                 let desc = DXGI_SWAP_CHAIN_DESC1 {
                     Width: width,
                     Height: height,
@@ -274,14 +299,19 @@ impl Surface {
 
     /// 画一帧。`width`、`height` 是像素，`dpi` 决定 DIP 和像素的比例
     pub fn render(&mut self, width: u32, height: u32, dpi: f32, dark: bool, draw: impl FnOnce(&Painter)) {
+        // 窗口还没建好（创建过程中的 WM_SIZE）时不画
+        if self.hwnd.0.is_null() || width == 0 || height == 0 {
+            return;
+        }
         let g = gfx();
         let result = (|| -> Result<()> {
             self.ensure(&g, width, height)?;
             let swapchain = self.swapchain.as_ref().unwrap();
             unsafe {
                 let surface: IDXGISurface = swapchain.GetBuffer(0)?;
+                let alpha = if self.direct { D2D1_ALPHA_MODE_IGNORE } else { D2D1_ALPHA_MODE_PREMULTIPLIED };
                 let props = D2D1_BITMAP_PROPERTIES1 {
-                    pixelFormat: D2D1_PIXEL_FORMAT { format: DXGI_FORMAT_B8G8R8A8_UNORM, alphaMode: D2D1_ALPHA_MODE_PREMULTIPLIED },
+                    pixelFormat: D2D1_PIXEL_FORMAT { format: DXGI_FORMAT_B8G8R8A8_UNORM, alphaMode: alpha },
                     dpiX: dpi,
                     dpiY: dpi,
                     bitmapOptions: D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,

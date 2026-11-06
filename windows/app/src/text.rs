@@ -108,6 +108,11 @@ fn with_text<R>(f: impl FnOnce(&mut TextSystem) -> R) -> R {
     })
 }
 
+/// 等宽字体的名字（编辑框用）
+pub fn mono_family() -> String {
+    with_text(|t| t.mono_family.to_string())
+}
+
 pub fn dwrite() -> IDWriteFactory {
     with_text(|t| t.factory.clone())
 }

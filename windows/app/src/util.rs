@@ -147,3 +147,17 @@ pub fn friendly_path(path: &std::path::Path) -> String {
     }
     path.to_string_lossy().into_owned()
 }
+
+/// 当前进程的内存占用（工作集，MB）
+pub fn working_set_mb() -> f64 {
+    use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
+    use windows::Win32::System::Threading::GetCurrentProcess;
+    unsafe {
+        let mut counters = PROCESS_MEMORY_COUNTERS { cb: std::mem::size_of::<PROCESS_MEMORY_COUNTERS>() as u32, ..Default::default() };
+        if GetProcessMemoryInfo(GetCurrentProcess(), &mut counters, counters.cb).is_ok() {
+            counters.WorkingSetSize as f64 / 1_048_576.0
+        } else {
+            0.0
+        }
+    }
+}

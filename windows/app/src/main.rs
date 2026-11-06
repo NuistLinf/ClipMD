@@ -5,6 +5,8 @@
 //! 平台无关的逻辑（HTML 转 Markdown、命名、记录规则）在 `clipmd-core` 里，和 macOS 版共用同一套测试用例。
 
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
+// 消息常量没导入时 match 分支会变成"匹配一切"的变量，必须报错
+#![deny(unreachable_patterns, non_snake_case)]
 
 #[cfg(windows)]
 mod anim;
