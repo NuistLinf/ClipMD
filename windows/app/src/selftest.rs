@@ -257,9 +257,10 @@ fn more_steps() {
             save_image("math-samples.png", &Image { width: 1400, height: 1100, pixels });
         }
     });
-    // 预览窗口
+    // 预览窗口（先把置顶的悬浮窗藏起来，截图干净一点）
     step(200, || {
         let a = app();
+        a.panel().unwrap().hide();
         let note = a.notes.borrow().notes.iter().find(|n| n.title.contains("训练")).cloned();
         match note {
             Some(n) => crate::preview::open(&n.path),
@@ -298,6 +299,9 @@ fn more_steps() {
     });
     // 剪贴板记录预览：文字、图片
     step(300, || {
+        app().panel().unwrap().show();
+    });
+    step(400, || {
         let id = app().history.borrow().items.iter().find(|i| !i.is_image()).map(|i| i.id.clone());
         if let Some(id) = id {
             crate::clip_preview::toggle(&id);
