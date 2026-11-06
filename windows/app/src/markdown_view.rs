@@ -122,7 +122,8 @@ impl DocView {
             let gap = match (&previous, &block.kind) {
                 (None, _) => 0.0,
                 (_, BlockKind::Heading(level)) => if *level <= 2 { base * 1.3 } else { base * 1.0 },
-                (Some(BlockKind::Heading(_)), _) => base * 0.45,
+                // 一、二级标题下面有分隔线，多留点空
+                (Some(BlockKind::Heading(level)), _) => if *level <= 2 { base * 0.95 } else { base * 0.45 },
                 _ if block.list_depth > 0 && blocks.get(index.wrapping_sub(1)).is_some_and(|b| b.list_depth > 0) => base * 0.3,
                 _ => base * 0.75,
             };

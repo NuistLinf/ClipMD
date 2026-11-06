@@ -757,7 +757,7 @@ impl Session {
         } else {
             None
         };
-        let dim = Color::BLACK.alpha(0.45);
+        let dim = Color::BLACK.alpha(0.5);
         match shown {
             Some(sel) => {
                 p.fill_rect(Rect::new(0.0, 0.0, size.w, sel.y), dim);

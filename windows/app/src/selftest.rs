@@ -155,6 +155,7 @@ pub fn start(dir: PathBuf) {
     step(900, || {
         let a = app();
         let panel = a.panel().unwrap();
+        note(&format!("启动后闲置内存（工作集）：{:.1} MB", crate::util::working_set_mb()));
         check("示例笔记", a.notes.borrow().notes.len() == 4, &format!("{} 条", a.notes.borrow().notes.len()));
         check("示例剪贴板记录", a.history.borrow().items.len() == 5, &format!("{} 条", a.history.borrow().items.len()));
         for (dark, name) in [(false, "panel-light.png"), (true, "panel-dark.png")] {
