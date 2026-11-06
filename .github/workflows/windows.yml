@@ -1,0 +1,79 @@
+name: Windows
+
+on:
+  push:
+    branches: [main, windows]
+    paths: ["windows/**", ".github/workflows/windows.yml"]
+  pull_request:
+    paths: ["windows/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust 工具链
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustc --version
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            windows/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('windows/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: 核心逻辑测试
+        run: cargo test -p clipmd-core
+
+      - name: 编译
+        run: |
+          cargo build --release
+          $exe = Get-Item target\release\ClipMD.exe
+          "ClipMD.exe: {0:N0} 字节" -f $exe.Length
+
+      - name: 自检（真实窗口、示例数据）
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP "selftest"
+          $p = Start-Process -FilePath target\release\ClipMD.exe -ArgumentList "--selftest", "`"$out`"" -PassThru
+          if (-not $p.WaitForExit(180000)) { $p.Kill(); Write-Host "自检超时" }
+          if (Test-Path "$out\data\ClipMD.log") { Copy-Item "$out\data\ClipMD.log" "$out\ClipMD.log" }
+          if (Test-Path "$out\report.txt") { Get-Content "$out\report.txt" } else { Write-Host "没有生成 report.txt" }
+          if ($p.ExitCode -ne 0) { Write-Host "退出码 $($p.ExitCode)"; exit 1 }
+
+      - name: 上传自检结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selftest
+          path: |
+            ${{ runner.temp }}/selftest/*.png
+            ${{ runner.temp }}/selftest/*.txt
+            ${{ runner.temp }}/selftest/*.log
+            ${{ runner.temp }}/selftest/notes/*.md
+
+      - name: 打包
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item target\release\ClipMD.exe dist\
+          Copy-Item ..\LICENSE dist\LICENSE.txt
+          Compress-Archive -Path dist\* -DestinationPath "ClipMD-$version-windows-x64.zip" -Force
+          Get-Item "ClipMD-$version-windows-x64.zip" | Select-Object Name, Length
+
+      - name: 上传程序
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipMD-windows
+          path: windows/ClipMD-*-windows-x64.zip
